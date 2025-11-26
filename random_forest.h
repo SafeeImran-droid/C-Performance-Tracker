@@ -28,14 +28,12 @@ typedef struct {
 void rf_init(RandomForest *rf, int tree_count, int max_depth, int seed);
 void rf_free(RandomForest *rf);
 
-// For attendance classification: training_data X: features per student (attendance % per course), y: 1 if expected >=80 else 0
-// For performance regression: features similar, y: current cgpa or predicted cgpa
 void rf_train_classification(RandomForest *rf, double X[][32], int n, int features, int y[]);
 int rf_predict_classification(RandomForest *rf, double x[], int features);
 void rf_train_regression(RandomForest *rf, double X[][32], int n, int features, double y[]);
 double rf_predict_regression(RandomForest *rf, double x[], int features);
 
-// OOB estimate functions
+// oob estimate 
 double rf_oob_classification_error(RandomForest *rf, double X[][32], int n, int features, int y[]);
 double rf_oob_regression_rmse(RandomForest *rf, double X[][32], int n, int features, double y[]);
 
