@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "attendance.h"
 #include "utils.h"
 
@@ -37,9 +38,6 @@ int compute_absences(CourseAttendance *c, int student_index){
     return absent;
 }
 
-// Simple CSV format:
-// course_code,student_count,days
-// then rows = student_count lines each with days entries 0/1 separated by commas
 int load_attendance_csv(const char *filename, CourseAttendance courses[], int *course_count){
     FILE *f = fopen(filename, "r");
     if (!f) return 0;
