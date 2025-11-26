@@ -1,16 +1,21 @@
 CC = gcc
-CFLAGS = -Wall -O2 `pkg-config --cflags sdl3 sdl3-ttf`
-LDFLAGS = `pkg-config --libs sdl3 sdl3-ttf` -lm
+CFLAGS = -Wall -O2 -I/mingw64/include
+LDFLAGS = -L/mingw64/lib -lopengl32 -lglu32 -lfreeglut -lm -lpthread
 
-SRCS = main.c sdl_gui.c attendance.c grades.c random_forest.c utils.c
+SRCS = main.c attendance.c grades.c random_forest.c gui.c utils.c
 OBJS = $(SRCS:.c=.o)
 
-TARGET = sdl3_tracker
+TARGET = gui_tracker.exe
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
+	$(CC) -o $(TARGET) $(OBJS) $(LDFLAGS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(TARGET)
+
+.PHONY: all clean
