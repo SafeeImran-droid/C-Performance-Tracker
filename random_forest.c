@@ -4,10 +4,7 @@
 #include <math.h>
 #include "random_forest.h"
 
-// NOTE: this is a simplified random forest implementation.
-// Each tree is a binary partition tree built by greedy best-split
-// over a random subset of features and bootstrap samples.
-// Trees are shallow (max_depth) and small to keep code moderate.
+
 
 static double g_rand_double(unsigned *seed) {
     *seed = (*seed * 1103515245u + 12345u) & 0x7fffffff;
@@ -28,7 +25,7 @@ void rf_free(RandomForest *rf){
     rf->tcount = 0;
 }
 
-// Helpers: compute Gini for binary classification split
+//compute Gini for binary classification split
 static double gini_split(int left_count, int left_positive, int right_count, int right_positive) {
     double lprob = left_count ? (double)left_positive / left_count : 0.0;
     double rprob = right_count ? (double)right_positive / right_count : 0.0;
@@ -38,7 +35,7 @@ static double gini_split(int left_count, int left_positive, int right_count, int
     return (left_count * gleft + right_count * gright) / (double)total;
 }
 
-// Mean squared error for regression split
+// mse
 static double mse_split(int left_count, double left_sum, double left_sqsum, int right_count, double right_sum, double right_sqsum) {
     double left_mse = 0.0, right_mse = 0.0;
     if (left_count) {
@@ -53,11 +50,11 @@ static double mse_split(int left_count, double left_sum, double left_sqsum, int 
     return (left_count * left_mse + right_count * right_mse) / total;
 }
 
-// Train a single tree using bootstrap samples and greedy splits
+// train one single tree using bootstrap samples 
 static void train_tree_classification(SimpleTree *tree, double X[][32], int n, int features, int y[], int max_depth, unsigned *seed) {
-    // For simplicity, build only root split and two leaves if depth==1, else recursively split limited times.
+
     tree->node_count = 0;
-    // bootstrap indices
+    // bootstrap 
     int *inbag = malloc(sizeof(int) * n);
     for (int i=0;i<n;i++) inbag[i]=0;
     int bsamples = n;
@@ -68,7 +65,7 @@ static void train_tree_classification(SimpleTree *tree, double X[][32], int n, i
         inbag[idx] = 1;
     }
 
-    // brute force search over features and thresholds (unique values)
+    // brute force search over features
     double best_score = 1e9;
     int best_f = 0;
     double best_thresh = 0;
@@ -79,7 +76,7 @@ static void train_tree_classification(SimpleTree *tree, double X[][32], int n, i
         for (int i=0;i<n;i++){
             vals[m++] = X[i][f];
         }
-        // try thresholds (midpoints of sorted unique)
+        // try thresholds 
         for (int t=0;t<m;t++){
             double thresh = vals[t];
             int left_c = 0, left_pos = 0, right_c = 0, right_pos = 0;
@@ -103,7 +100,7 @@ static void train_tree_classification(SimpleTree *tree, double X[][32], int n, i
         }
     }
 
-    // Build root node
+    // root node
     TreeNodeSimple root;
     root.feature_index = best_f;
     root.threshold = best_thresh;
@@ -127,7 +124,7 @@ static void train_tree_classification(SimpleTree *tree, double X[][32], int n, i
     free(inbag);
 }
 
-// Regression tree (similar)
+// reg tree
 static void train_tree_regression(SimpleTree *tree, double X[][32], int n, int features, double y[], int max_depth, unsigned *seed) {
     tree->node_count = 0;
     int *inbag = malloc(sizeof(int) * n);
@@ -225,13 +222,12 @@ double rf_predict_regression(RandomForest *rf, double x[], int features){
     return sum / rf->tcount;
 }
 
-// OOB methods (approx): For each sample, consider trees where it was OOB (this implementation didn't store inbag masks; so approximate by using trees trained and treat half as OOB randomly)
+// OOB
 double rf_oob_classification_error(RandomForest *rf, double X[][32], int n, int features, int y[]){
     int mistakes = 0;
     for (int i=0;i<n;i++){
         int votes = 0, vcount=0;
         for (int t=0;t<rf->tcount;t++){
-            // approximate: treat every other tree as OOB for this sample
             if ((i + t) % 2 == 0) continue;
             double prob = rf->trees[t].nodes[0].feature_index >= 0 ? ((X[i][rf->trees[t].nodes[0].feature_index] <= rf->trees[t].nodes[0].threshold) ? rf->trees[t].nodes[0].left_value : rf->trees[t].nodes[0].right_value) : 0.0;
             votes += (prob >= 0.5) ? 1 : 0;
